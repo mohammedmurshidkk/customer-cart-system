@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Customer Cart System
 
-## Getting Started
+A simple e-commerce shopping cart system with discount code functionality built with Next.js, TypeScript, and Tailwind CSS.
 
-First, run the development server:
+## Features
 
+- 🛒 Shopping cart with add to cart functionality
+- 💳 Checkout with discount code validation
+- 🎁 Automatic discount code generation every 3rd order (10% off)
+- 📊 Admin dashboard with statistics
+- 💾 In-memory data storage
+
+## Tech Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+
+## Setup Instructions
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Run the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+src/
+├── app/
+│   ├── page.tsx           # Products listing page
+│   ├── cart/
+│   │   └── page.tsx       # Cart and checkout page
+│   ├── admin/
+│   │   └── page.tsx       # Admin dashboard
+│   └── api/
+│       ├── cart/
+│       │   └── route.ts   # Cart API (GET, POST)
+│       ├── checkout/
+│       │   └── route.ts   # Checkout API (POST)
+│       └── admin/
+│           └── stats/
+│               └── route.ts  # Admin stats API (GET)
+└── lib/
+    └── store.ts           # In-memory data store
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Shopping Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Browse products on the home page
+2. Click "Add to Cart" to add items
+3. Click "Cart" to view your cart
+4. Enter discount code (if available)
+5. Click "Place Order" to checkout
 
-## Deploy on Vercel
+### Discount Codes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Generated automatically on every 3rd order
+- Format: `SAVE10_3`, `SAVE10_6`, `SAVE10_9`, etc.
+- Provides 10% discount on total order
+- Can only be used once
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Admin Dashboard
+
+- View total orders count
+- View total items purchased
+- View total purchase amount
+- View total discount given
+- See all discount codes with their status
+
+## API Endpoints
+
+### Customer APIs
+
+- `GET /api/cart` - Get current cart
+- `POST /api/cart` - Add item to cart
+  ```json
+  { "productId": 1, "quantity": 1 }
+  ```
+- `POST /api/checkout` - Place order
+  ```json
+  { "discountCode": "SAVE10_3" }
+  ```
+
+### Admin APIs
+
+- `GET /api/admin/stats` - Get statistics
+
+## Edge Cases Handled
+
+- Empty cart checkout prevention
+- Invalid product ID validation
+- Quantity validation (must be >= 1)
+- Invalid discount code handling
+- Already used discount code handling
+- Discount code generation on every 3rd order
+
+## Build
+
+To create a production build:
+```bash
+npm run build
+npm start
+```
+
+## Notes
+
+- All data is stored in-memory and will be lost on server restart
+- No authentication/authorization implemented
+- Single user cart system
+- Pre-defined product catalog with 5 products
