@@ -9,13 +9,26 @@ A simple e-commerce shopping cart system with discount code functionality built 
 - 🎁 Automatic discount code generation every 3rd order (10% off)
 - 📊 Admin dashboard with statistics
 - 💾 In-memory data storage
+- 🌓 Light/Dark theme support
+
+## Screenshots
+
+### Products Page
+![Products Page](screenshots/products.png)
+
+### Shopping Cart
+![Shopping Cart](screenshots/cart.png)
+
+### Admin Dashboard
+![Admin Dashboard](screenshots/admin.png)
 
 ## Tech Stack
 
 - Next.js 16
 - React 19
 - TypeScript
-- Tailwind CSS
+- Tailwind CSS v4
+- next-themes
 
 ## Setup Instructions
 
