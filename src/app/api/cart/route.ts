@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addToCart, getCart, removeFromCart, updateCartQuantity } from '@/lib/store';
+import { cookies } from 'next/headers';
+import { addToCart, getCart, removeFromCart, updateCartQuantity, getCartFromCookie, serializeCartToCookie } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const CART_COOKIE_NAME = 'shopping_cart';
+
 export async function GET() {
-  const cart = getCart();
+  const cookieStore = await cookies();
+  const cartCookie = cookieStore.get(CART_COOKIE_NAME);
+  const cart = getCartFromCookie(cartCookie?.value);
   return NextResponse.json(cart);
 }
 
@@ -21,7 +26,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = addToCart(productId, quantity);
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get(CART_COOKIE_NAME);
+    const currentCart = getCartFromCookie(cartCookie?.value);
+
+    const result = addToCart(currentCart, productId, quantity);
 
     if (!result.success) {
       return NextResponse.json(
@@ -30,8 +39,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cart = getCart();
-    return NextResponse.json(cart);
+    const response = NextResponse.json(result.cart);
+    response.cookies.set(CART_COOKIE_NAME, serializeCartToCookie(result.cart), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       { error: "Invalid request" },
@@ -52,7 +69,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const result = updateCartQuantity(productId, quantity);
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get(CART_COOKIE_NAME);
+    const currentCart = getCartFromCookie(cartCookie?.value);
+
+    const result = updateCartQuantity(currentCart, productId, quantity);
 
     if (!result.success) {
       return NextResponse.json(
@@ -61,8 +82,16 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const cart = getCart();
-    return NextResponse.json(cart);
+    const response = NextResponse.json(result.cart);
+    response.cookies.set(CART_COOKIE_NAME, serializeCartToCookie(result.cart), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       { error: "Invalid request" },
@@ -83,7 +112,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const result = removeFromCart(productId);
+    const cookieStore = await cookies();
+    const cartCookie = cookieStore.get(CART_COOKIE_NAME);
+    const currentCart = getCartFromCookie(cartCookie?.value);
+
+    const result = removeFromCart(currentCart, productId);
 
     if (!result.success) {
       return NextResponse.json(
@@ -92,8 +125,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const cart = getCart();
-    return NextResponse.json(cart);
+    const response = NextResponse.json(result.cart);
+    response.cookies.set(CART_COOKIE_NAME, serializeCartToCookie(result.cart), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       { error: "Invalid request" },

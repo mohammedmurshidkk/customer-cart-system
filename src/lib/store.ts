@@ -53,29 +53,48 @@ export const cart: Cart = {
 export const orders: Order[] = [];
 export const discountCodes: DiscountCode[] = [];
 
-export function calculateCartTotal(): number {
-  return cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+// Cookie helper functions
+export function getCartFromCookie(cookieValue: string | undefined): Cart {
+  if (!cookieValue) {
+    return { items: [], total: 0 };
+  }
+  try {
+    const decoded = decodeURIComponent(cookieValue);
+    return JSON.parse(decoded);
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+export function serializeCartToCookie(cart: Cart): string {
+  return encodeURIComponent(JSON.stringify(cart));
+}
+
+export function calculateCartTotal(cartItems: CartItem[]): number {
+  return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
 export function calculateDiscount(amount = 0, discountPer = DISCOUNT_PERCENTAGE): number {
   return Math.round((amount * discountPer) / 100);
 }
 
-export function addToCart(productId: number, quantity: number = 1): { success: boolean; message?: string } {
+export function addToCart(currentCart: Cart, productId: number, quantity: number = 1): { success: boolean; message?: string; cart: Cart } {
   if (quantity < 1) {
-    return { success: false, message: "Quantity must be at least 1" };
+    return { success: false, message: "Quantity must be at least 1", cart: currentCart };
   }
 
   const product = products.find(p => p.id === productId);
   if (!product) {
-    return { success: false, message: "Product not found" };
+    return { success: false, message: "Product not found", cart: currentCart };
   }
 
-  const existingItem = cart.items.find(item => item.productId === productId);
+  const newCart = { ...currentCart, items: [...currentCart.items] };
+  const existingItem = newCart.items.find(item => item.productId === productId);
+
   if (existingItem) {
     existingItem.quantity += quantity;
   } else {
-    cart.items.push({
+    newCart.items.push({
       productId: product.id,
       name: product.name,
       price: product.price,
@@ -83,61 +102,64 @@ export function addToCart(productId: number, quantity: number = 1): { success: b
     });
   }
 
-  cart.total = calculateCartTotal();
-  return { success: true };
+  newCart.total = calculateCartTotal(newCart.items);
+  return { success: true, cart: newCart };
 }
 
-export function getCart(): Cart {
-  return { ...cart };
+export function getCart(currentCart: Cart): Cart {
+  return { ...currentCart };
 }
 
-export function updateCartQuantity(productId: number, quantity: number): { success: boolean; message?: string } {
-  const item = cart.items.find(item => item.productId === productId);
+export function updateCartQuantity(currentCart: Cart, productId: number, quantity: number): { success: boolean; message?: string; cart: Cart } {
+  const newCart = { ...currentCart, items: [...currentCart.items] };
+  const item = newCart.items.find(item => item.productId === productId);
+
   if (!item) {
-    return { success: false, message: "Item not found in cart" };
+    return { success: false, message: "Item not found in cart", cart: currentCart };
   }
 
   if (quantity < 1) {
-    return { success: false, message: "Quantity must be at least 1" };
+    return { success: false, message: "Quantity must be at least 1", cart: currentCart };
   }
 
   item.quantity = quantity;
-  cart.total = calculateCartTotal();
-  return { success: true };
+  newCart.total = calculateCartTotal(newCart.items);
+  return { success: true, cart: newCart };
 }
 
-export function removeFromCart(productId: number): { success: boolean; message?: string } {
-  const itemIndex = cart.items.findIndex(item => item.productId === productId);
+export function removeFromCart(currentCart: Cart, productId: number): { success: boolean; message?: string; cart: Cart } {
+  const newCart = { ...currentCart, items: [...currentCart.items] };
+  const itemIndex = newCart.items.findIndex(item => item.productId === productId);
+
   if (itemIndex === -1) {
-    return { success: false, message: "Item not found in cart" };
+    return { success: false, message: "Item not found in cart", cart: currentCart };
   }
 
-  cart.items.splice(itemIndex, 1);
-  cart.total = calculateCartTotal();
-  return { success: true };
+  newCart.items.splice(itemIndex, 1);
+  newCart.total = calculateCartTotal(newCart.items);
+  return { success: true, cart: newCart };
 }
 
-export function clearCart(): void {
-  cart.items = [];
-  cart.total = 0;
+export function clearCart(): Cart {
+  return { items: [], total: 0 };
 }
 
-export function checkout(discountCodeInput?: string): { success: boolean; message?: string; order?: Order; newDiscountCode?: string } {
-  if (cart.items.length === 0) {
-    return { success: false, message: "Cart is empty" };
+export function checkout(currentCart: Cart, discountCodeInput?: string): { success: boolean; message?: string; order?: Order; newDiscountCode?: string; cart: Cart } {
+  if (currentCart.items.length === 0) {
+    return { success: false, message: "Cart is empty", cart: currentCart };
   }
 
-  const subtotal = calculateCartTotal();
+  const subtotal = calculateCartTotal(currentCart.items);
   let discount = 0;
   let validDiscountCode: string | null = null;
 
   if (discountCodeInput) {
     const code = discountCodes.find(c => c.code === discountCodeInput);
     if (!code) {
-      return { success: false, message: "Invalid or already used discount code" };
+      return { success: false, message: "Invalid or already used discount code", cart: currentCart };
     }
     if (code.isUsed) {
-      return { success: false, message: "Invalid or already used discount code" };
+      return { success: false, message: "Invalid or already used discount code", cart: currentCart };
     }
 
     discount = calculateDiscount(subtotal);
@@ -149,7 +171,7 @@ export function checkout(discountCodeInput?: string): { success: boolean; messag
   const total = subtotal - discount;
   const order: Order = {
     id: `ORDER-${orders.length + 1}-${Date.now()}`,
-    items: [...cart.items],
+    items: [...currentCart.items],
     subtotal,
     discount,
     total,
@@ -158,7 +180,7 @@ export function checkout(discountCodeInput?: string): { success: boolean; messag
   };
 
   orders.push(order);
-  clearCart();
+  const emptyCart = clearCart();
 
   const orderNumber = orders.length;
   let newDiscountCode: string | undefined;
@@ -174,7 +196,7 @@ export function checkout(discountCodeInput?: string): { success: boolean; messag
     newDiscountCode = code;
   }
 
-  return { success: true, order, newDiscountCode };
+  return { success: true, order, newDiscountCode, cart: emptyCart };
 }
 
 export function getAvailableCoupons(): DiscountCode[] {

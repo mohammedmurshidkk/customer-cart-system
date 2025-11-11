@@ -8,7 +8,8 @@ A simple e-commerce shopping cart system with discount code functionality built 
 - 💳 Checkout with discount code validation
 - 🎁 Automatic discount code generation every 3rd order (10% off)
 - 📊 Admin dashboard with statistics
-- 💾 In-memory data storage
+- 🍪 Cookie-based cart persistence (survives page refreshes and server restarts)
+- 💾 In-memory order and discount code storage
 - 🌓 Light/Dark theme support
 
 ## Screenshots
@@ -64,7 +65,7 @@ src/
 │           └── stats/
 │               └── route.ts  # Admin stats API (GET)
 └── lib/
-    └── store.ts           # In-memory data store
+    └── store.ts           # Data store with cookie utilities
 ```
 
 ## Usage
@@ -156,9 +157,28 @@ npm run build
 npm start
 ```
 
+## Data Storage Architecture
+
+### Cart Data (Cookie-based)
+- Cart items are stored in HTTP-only cookies (`shopping_cart`)
+- Persists across page refreshes and server restarts
+- 7-day expiration period
+- Automatically serialized/deserialized as JSON
+- Cookie attributes:
+  - `httpOnly: true` - Prevents XSS attacks
+  - `secure: true` (production only) - HTTPS only
+  - `sameSite: 'lax'` - CSRF protection
+  - `maxAge: 7 days` - Auto-cleanup
+
+### Order & Discount Data (In-memory)
+- Orders and discount codes are stored in server memory
+- Will be lost on server restart
+- Suitable for demo/development purposes
+
 ## Notes
 
-- All data is stored in-memory and will be lost on server restart
+- Cart data persists in cookies (survives server restarts)
+- Order history and discount codes are stored in-memory (lost on restart)
 - No authentication/authorization implemented
 - Single user cart system
 - Pre-defined product catalog with 5 products
