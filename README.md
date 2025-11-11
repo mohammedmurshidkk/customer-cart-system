@@ -29,6 +29,7 @@ A simple e-commerce shopping cart system with discount code functionality built 
 - TypeScript
 - Tailwind CSS v4
 - next-themes
+- Jest + React Testing Library
 
 ## Setup Instructions
 
@@ -100,6 +101,15 @@ src/
   ```json
   { "productId": 1, "quantity": 1 }
   ```
+- `PATCH /api/cart` - Update item quantity
+  ```json
+  { "productId": 1, "quantity": 3 }
+  ```
+- `DELETE /api/cart` - Remove item from cart
+  ```json
+  { "productId": 1 }
+  ```
+- `GET /api/coupons` - Get available discount codes
 - `POST /api/checkout` - Place order
   ```json
   { "discountCode": "SAVE10_3" }
@@ -117,6 +127,26 @@ src/
 - Invalid discount code handling
 - Already used discount code handling
 - Discount code generation on every 3rd order
+
+## Testing
+
+Run tests with:
+```bash
+npm test
+```
+
+Run tests in watch mode:
+```bash
+npm run test:watch
+```
+
+**Test Coverage:**
+- 67 tests across 5 test suites
+- Store logic tests (33 tests)
+- Cart API tests (11 tests)
+- Checkout API tests (8 tests)
+- Coupons API tests (4 tests)
+- Admin Stats API tests (7 tests)
 
 ## Build
 
